@@ -13,7 +13,7 @@ pipeline {
 
         stage('Checkout') {
             steps {
-                git branch: 'main' 'https://github.com/divanshu3702/docker-demo.git'
+                git branch: 'main', 'https://github.com/divanshu3702/docker-demo.git'
             }
         }
 
