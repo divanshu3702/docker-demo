@@ -21,7 +21,20 @@ pipeline {
             }
         }
 
+    stage('SonarQube Analysis') {
+    steps {
+        withSonarQubeEnv('sonar-server') {
+            sh 'mvn clean verify sonar:sonar'
+        }
+    }
+        
+   stage('Quality Gate') {
+    steps {
+        timeout(time: 2, unit: 'MINUTES') {
+            waitForQualityGate abortPipeline: true
+        }
     }
 }
+
   
   
