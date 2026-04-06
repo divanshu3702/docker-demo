@@ -1,40 +1,59 @@
 pipeline {
     agent any
 
+    tools {
+        maven 'Maven'
+    }
+
+    environment {
+        SONAR_SERVER = 'sonar-server'
+    }
+
     stages {
 
         stage('Checkout') {
             steps {
-                git branch: 'main', url: 'https://github.com/divanshu3702/docker-demo.git'
+                git 'https://github.com/divanshu3702/docker-demo.git'
             }
         }
 
         stage('Build') {
             steps {
-                sh 'echo Build Started'
+                sh 'mvn clean compile'
             }
         }
 
-        stage('Docker Build') {
+        stage('SonarQube Analysis') {
             steps {
-                sh 'docker build -t my-app .'
+                withSonarQubeEnv("${SONAR_SERVER}") {
+                    sh 'mvn sonar:sonar'
+                }
             }
         }
 
-    stage('SonarQube Analysis') {
-    steps {
-        withSonarQubeEnv('sonar-server') {
-            sh 'mvn clean verify sonar:sonar'
+        stage('Quality Gate') {
+            steps {
+                timeout(time: 2, unit: 'MINUTES') {
+                    waitForQualityGate abortPipeline: true
+                }
+            }
         }
-    }
-        
-   stage('Quality Gate') {
-    steps {
-        timeout(time: 2, unit: 'MINUTES') {
-            waitForQualityGate abortPipeline: true
-        }
-    }
-}
 
-  
-  
+        stage('Package') {
+            steps {
+                sh 'mvn package'
+            }
+        }
+
+    }  // ✅ stages close
+
+    post {
+        success {
+            echo 'Pipeline Success'
+        }
+        failure {
+            echo 'Pipeline Failed'
+        }
+    }
+
+}  // ✅ pipeline close
