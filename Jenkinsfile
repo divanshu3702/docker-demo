@@ -1,8 +1,8 @@
 pipeline {
-    agent {
-        docker {
-            image 'node:18'
-        }
+    agent any
+
+    tools {
+        nodejs 'NodeJS'
     }
 
     environment {
@@ -44,6 +44,7 @@ pipeline {
                 sh 'docker build -t demo-app .'
             }
         }
+
     }
 
     post {
