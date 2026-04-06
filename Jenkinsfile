@@ -1,33 +1,31 @@
 pipeline {
     agent any
 
+    tools {
+        nodejs 'NodeJS'   // 👈 Jenkins me configured hona chahiye
+    }
+
     environment {
         SONAR_SERVER = 'sonar-server'
     }
 
     stages {
 
+        // 🔹 Stage 1: Checkout Code
         stage('Checkout') {
             steps {
                 git branch: 'main', url: 'https://github.com/divanshu3702/docker-demo.git'
             }
         }
 
-        // ✅ Node.js install dependencies
+        // 🔹 Stage 2: Install Dependencies
         stage('Install Dependencies') {
             steps {
                 sh 'npm install'
             }
         }
 
-        // ✅ Run app (optional test)
-        stage('Run App') {
-            steps {
-                sh 'node app.js &'
-            }
-        }
-
-        // ✅ SonarQube Analysis
+        // 🔹 Stage 3: SonarQube Analysis
         stage('SonarQube Analysis') {
             steps {
                 withSonarQubeEnv("${SONAR_SERVER}") {
@@ -36,7 +34,7 @@ pipeline {
             }
         }
 
-        // ✅ Quality Gate
+        // 🔹 Stage 4: Quality Gate
         stage('Quality Gate') {
             steps {
                 timeout(time: 2, unit: 'MINUTES') {
@@ -45,10 +43,17 @@ pipeline {
             }
         }
 
-        // ✅ Docker Build
+        // 🔹 Stage 5: Docker Build
         stage('Docker Build') {
             steps {
                 sh 'docker build -t demo-app .'
+            }
+        }
+
+        // 🔹 Stage 6: Run Container (Optional)
+        stage('Run Container') {
+            steps {
+                sh 'docker run -d -p 8081:3000 demo-app || true'
             }
         }
 
