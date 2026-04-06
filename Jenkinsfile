@@ -1,10 +1,6 @@
 pipeline {
     agent any
 
-    tools {
-        maven 'Maven'
-    }
-
     environment {
         SONAR_SERVER = 'sonar-server'
     }
@@ -17,20 +13,30 @@ pipeline {
             }
         }
 
-        stage('Build') {
+        // ✅ Node.js install dependencies
+        stage('Install Dependencies') {
             steps {
-                sh 'mvn clean compile'
+                sh 'npm install'
             }
         }
 
+        // ✅ Run app (optional test)
+        stage('Run App') {
+            steps {
+                sh 'node app.js &'
+            }
+        }
+
+        // ✅ SonarQube Analysis
         stage('SonarQube Analysis') {
             steps {
                 withSonarQubeEnv("${SONAR_SERVER}") {
-                    sh 'mvn sonar:sonar'
+                    sh 'sonar-scanner'
                 }
             }
         }
 
+        // ✅ Quality Gate
         stage('Quality Gate') {
             steps {
                 timeout(time: 2, unit: 'MINUTES') {
@@ -39,21 +45,21 @@ pipeline {
             }
         }
 
-        stage('Package') {
+        // ✅ Docker Build
+        stage('Docker Build') {
             steps {
-                sh 'mvn package'
+                sh 'docker build -t demo-app .'
             }
         }
 
-    }  // ✅ stages close
+    }
 
     post {
         success {
-            echo 'Pipeline Success'
+            echo '✅ Pipeline Success'
         }
         failure {
-            echo 'Pipeline Failed'
+            echo '❌ Pipeline Failed'
         }
     }
-
-}  // ✅ pipeline close
+}
