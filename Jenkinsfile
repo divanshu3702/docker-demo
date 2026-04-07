@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     tools {
-        nodejs 'NodeJS'   // Must match name in Global Tool Configuration
+        nodejs 'NodeJS'
     }
 
     environment {
@@ -26,12 +26,15 @@ pipeline {
         stage('SonarQube Analysis') {
             steps {
                 withSonarQubeEnv('sonar-server') {
-                    sh '''
-                    npx sonar-scanner \
-                    -Dsonar.projectKey=docker-demo \
-                    -Dsonar.sources=. \
-                    -Dsonar.host.url=$SONAR_HOST_URL
-                    '''
+                    withCredentials([string(credentialsId: 'sonar-token', variable: 'SONAR_TOKEN')]) {
+                        sh '''
+                        npx sonar-scanner \
+                        -Dsonar.projectKey=docker-demo \
+                        -Dsonar.sources=. \
+                        -Dsonar.host.url=$SONAR_HOST_URL \
+                        -Dsonar.token=$SONAR_TOKEN
+                        '''
+                    }
                 }
             }
         }
