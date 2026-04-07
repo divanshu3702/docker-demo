@@ -1,10 +1,6 @@
 pipeline {
     agent any
 
-    tools {
-        nodejs 'NodeJS'   // Make sure NodeJS plugin is installed
-    }
-
     environment {
         SONAR_HOST_URL = 'http://sonarqube:9000'
     }
