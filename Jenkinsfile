@@ -2,18 +2,18 @@ pipeline {
     agent any
 
     tools {
-        nodejs 'NodeJS'
+        nodejs 'NodeJS'   // Make sure NodeJS plugin is installed
     }
 
     environment {
-        SONAR_SERVER = 'sonar-server'
+        SONAR_HOST_URL = 'http://sonarqube:9000'
     }
 
     stages {
 
-        stage('Checkout') {
+        stage('Checkout Code') {
             steps {
-                git branch: 'main', url: 'https://github.com/divanshu3702/docker-demo.git'
+                git 'https://github.com/divanshu3702/docker-demo.git'
             }
         }
 
@@ -25,8 +25,13 @@ pipeline {
 
         stage('SonarQube Analysis') {
             steps {
-                withSonarQubeEnv("${SONAR_SERVER}") {
-                    sh 'npx sonar-scanner'
+                withSonarQubeEnv('sonar-server') {
+                    sh '''
+                    npx sonar-scanner \
+                    -Dsonar.projectKey=docker-demo \
+                    -Dsonar.sources=. \
+                    -Dsonar.host.url=$SONAR_HOST_URL
+                    '''
                 }
             }
         }
@@ -41,15 +46,24 @@ pipeline {
 
         stage('Docker Build') {
             steps {
-                sh 'docker build -t demo-app .'
+                sh 'docker build -t docker-demo .'
             }
         }
 
+        stage('Docker Run') {
+            steps {
+                sh '''
+                docker stop docker-demo || true
+                docker rm docker-demo || true
+                docker run -d -p 3000:3000 --name docker-demo docker-demo
+                '''
+            }
+        }
     }
 
     post {
         success {
-            echo '✅ Pipeline Success'
+            echo '✅ Pipeline Successful'
         }
         failure {
             echo '❌ Pipeline Failed'
