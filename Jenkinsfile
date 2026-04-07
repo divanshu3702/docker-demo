@@ -1,21 +1,7 @@
 pipeline {
     agent any
 
-    tools {
-        nodejs 'NodeJS'   // Make sure NodeJS plugin + tool configured
-    }
-
-    environment {
-        IMAGE_NAME = "docker-demo"
-    }
-
     stages {
-
-        stage('Checkout Code') {
-            steps {
-                git branch: 'main', url: 'https://github.com/divanshu3702/docker-demo.git'
-            }
-        }
 
         stage('Install Dependencies') {
             steps {
@@ -23,23 +9,18 @@ pipeline {
             }
         }
 
-        // ✅ SONAR WORKING (NO TOKEN NEEDED - using Jenkins config)
         stage('SonarQube Analysis') {
             steps {
-              withSonarQubeEnv('sonar-server') {
-    withCredentials([string(credentialsId: 'sonar-token', variable: 'SONAR_TOKEN')]) {
-        sh '''
-        npx sonar-scanner \
-        -Dsonar.projectKey=docker-demo \
-        -Dsonar.sources=. \
-        -Dsonar.host.url=$SONAR_HOST_URL \
-        -Dsonar.login=$SONAR_TOKEN
-        '''
+                withSonarQubeEnv('sonar-server') {
+                    sh '''
+                    npx sonar-scanner \
+                    -Dsonar.projectKey=docker-demo \
+                    -Dsonar.sources=.
+                    '''
                 }
             }
         }
 
-        // ✅ QUALITY GATE FIXED
         stage('Quality Gate') {
             steps {
                 timeout(time: 2, unit: 'MINUTES') {
@@ -48,22 +29,18 @@ pipeline {
             }
         }
 
-        // ✅ DOCKER BUILD
         stage('Docker Build') {
             steps {
-                sh 'docker build -t $IMAGE_NAME .'
+                sh 'docker build -t my-app .'
             }
         }
 
-        // ✅ DOCKER RUN
         stage('Docker Run') {
             steps {
-                sh '''
-                docker rm -f docker-demo-container || true
-                docker run -d -p 3000:3000 --name docker-demo-container $IMAGE_NAME
-                '''
+                sh 'docker run -d -p 3000:3000 my-app'
             }
         }
+
     }
 
     post {
