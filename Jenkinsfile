@@ -15,7 +15,8 @@ pipeline {
                     sh '''
                     npx sonar-scanner \
                     -Dsonar.projectKey=docker-demo \
-                    -Dsonar.sources=.
+                    -Dsonar.sources=. \
+                    -Dsonar.login=$SONAR_TOKEN
                     '''
                 }
             }
