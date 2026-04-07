@@ -26,14 +26,15 @@ pipeline {
         // ✅ SONAR WORKING (NO TOKEN NEEDED - using Jenkins config)
         stage('SonarQube Analysis') {
             steps {
-                withSonarQubeEnv('sonar-server') {
-                    sh '''
-                    npx sonar-scanner \
-                    -Dsonar.projectKey=docker-demo \
-                    -Dsonar.sources=. \
-                    -Dsonar.host.url=http://localhost:9000
-                    -Dsonar.login=squ_8a0985691603a097fef69f0c0868627da31ce926
-                    '''
+              withSonarQubeEnv('sonar-server') {
+    withCredentials([string(credentialsId: 'sonar-token', variable: 'SONAR_TOKEN')]) {
+        sh '''
+        npx sonar-scanner \
+        -Dsonar.projectKey=docker-demo \
+        -Dsonar.sources=. \
+        -Dsonar.host.url=$SONAR_HOST_URL \
+        -Dsonar.login=$SONAR_TOKEN
+        '''
                 }
             }
         }
