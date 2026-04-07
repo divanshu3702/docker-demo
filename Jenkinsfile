@@ -31,7 +31,8 @@ pipeline {
                     npx sonar-scanner \
                     -Dsonar.projectKey=docker-demo \
                     -Dsonar.sources=. \
-                    -Dsonar.host.url=$SONAR_HOST_URL
+                    -Dsonar.host.url=http://sonarqube:9000
+                    -Dsonar.login=squ_8a0985691603a097fef69f0c0868627da31ce926
                     '''
                 }
             }
