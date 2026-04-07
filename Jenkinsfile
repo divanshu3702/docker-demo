@@ -2,11 +2,11 @@ pipeline {
     agent any
 
     tools {
-        nodejs 'NodeJS'
+        nodejs 'NodeJS'   // Make sure NodeJS plugin + tool configured
     }
 
     environment {
-        SONAR_HOST_URL = 'http://sonarqube:9000'
+        IMAGE_NAME = "docker-demo"
     }
 
     stages {
@@ -23,22 +23,21 @@ pipeline {
             }
         }
 
+        // ✅ SONAR WORKING (NO TOKEN NEEDED - using Jenkins config)
         stage('SonarQube Analysis') {
             steps {
                 withSonarQubeEnv('sonar-server') {
-                    withCredentials([string(credentialsId: 'sonar-token', variable: 'SONAR_TOKEN')]) {
-                        sh '''
-                        npx sonar-scanner \
-                        -Dsonar.projectKey=docker-demo \
-                        -Dsonar.sources=. \
-                        -Dsonar.host.url=$SONAR_HOST_URL \
-                        -Dsonar.token=$SONAR_TOKEN
-                        '''
-                    }
+                    sh '''
+                    npx sonar-scanner \
+                    -Dsonar.projectKey=docker-demo \
+                    -Dsonar.sources=. \
+                    -Dsonar.host.url=$SONAR_HOST_URL
+                    '''
                 }
             }
         }
 
+        // ✅ QUALITY GATE FIXED
         stage('Quality Gate') {
             steps {
                 timeout(time: 2, unit: 'MINUTES') {
@@ -47,18 +46,19 @@ pipeline {
             }
         }
 
+        // ✅ DOCKER BUILD
         stage('Docker Build') {
             steps {
-                sh 'docker build -t docker-demo .'
+                sh 'docker build -t $IMAGE_NAME .'
             }
         }
 
+        // ✅ DOCKER RUN
         stage('Docker Run') {
             steps {
                 sh '''
-                docker stop docker-demo || true
-                docker rm docker-demo || true
-                docker run -d -p 3000:3000 --name docker-demo docker-demo
+                docker rm -f docker-demo-container || true
+                docker run -d -p 3000:3000 --name docker-demo-container $IMAGE_NAME
                 '''
             }
         }
@@ -66,10 +66,10 @@ pipeline {
 
     post {
         success {
-            echo '✅ Pipeline Successful'
+            echo '✅ Pipeline SUCCESS'
         }
         failure {
-            echo '❌ Pipeline Failed'
+            echo '❌ Pipeline FAILED'
         }
     }
 }
